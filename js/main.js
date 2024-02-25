@@ -16,6 +16,7 @@ var MOUSE = {
 
 var nodes = [];
 
+
 /* https://github.com/timohausmann/quadtree-js.git v1.2.6 */
 
 class TreeNode {
@@ -162,6 +163,20 @@ class QuadTree {
 
         this.nodes = [];
     }
+
+    draw(qt) {
+        ctx.strokeStyle = "black";
+        ctx.rect(qt.node.x, qt.node.y, qt.node.width, qt.node.height);
+        ctx.stroke();
+    }
+
+    visualizeGrid(qt) {
+        this.draw(qt);
+        if(qt.nodes.length === 0) return;
+        qt.nodes.forEach(t => {
+            this.visualizeGrid(t);
+        })
+    }
 }
 
 
@@ -192,44 +207,23 @@ function checkNodeBounds() {
     })
 }
 
-function isCollision(a, b) {
-    return !(
-        ((a.y + a.height) < (b.y)) ||
-        (a.y > (b.y + b.height)) ||
-        ((a.x + a.width) < b.x) ||
-        (a.x > (b.x + b.width))
-    );
-}
-
-function detectCollisionWithSides(a, b) {
-    if (
-        !(
-            a.y + a.height < b.y ||
-            a.y > b.y + b.height ||
-            a.x + a.width < b.x ||
-            a.x > b.x + b.width
-        )
-    ) {
-        // Collision detected, determine sides of collision
-        let collisionSides = "";
-
-        if (a.x < b.x) {
-            collisionSides += "R"; // Collision on the right side of 'a'
-        } else if (a.x > b.x) {
-            collisionSides += "L"; // Collision on the left side of 'a'
+function collide(r1,r2){
+    var dx=(r1.x+r1.width/2)-(r2.x+r2.width/2);
+    var dy=(r1.y+r1.height/2)-(r2.y+r2.height/2);
+    var width=(r1.width+r2.width)/2;
+    var height=(r1.height+r2.height)/2;
+    var crossWidth=width*dy;
+    var crossHeight=height*dx;
+    var collision='none';
+    //
+    if(Math.abs(dx)<=width && Math.abs(dy)<=height){
+        if(crossWidth>crossHeight){
+            collision=(crossWidth>(-crossHeight))?'bottom':'left';
+        }else{
+            collision=(crossWidth>-(crossHeight))?'right':'top';
         }
-
-        if (a.y < b.y) {
-            collisionSides += "B"; // Collision on the bottom side of 'a'
-        } else if (a.y > b.y) {
-            collisionSides += "T"; // Collision on the top side of 'a'
-        }
-
-        return collisionSides;
     }
-
-    // No collision
-    return null;
+    return(collision);
 }
 
 
@@ -239,32 +233,35 @@ function checkNodeCollision() {
         let intersects = tree.find(bn);
         intersects?.forEach(cn => {
             if(bn === cn) return;
-            let side = detectCollisionWithSides(bn, cn);
+            let side = collide(bn, cn);
             if(side) {
                 switch(side) {
-                    case "LT":
-                        bn.xVel = cn.xVel;
-                        bn.yVel = -cn.yVel;
-                    case "RT":
-                        bn.xVel =  -cn.xVel;
-                        bn.yVel =  -cn.yVel;
-                    case "BL":
-                        bn.xVel =  cn.xVel;
-                        bn.yVel =  cn.yVel;
-                    case "BR":
-                        bn.xVel =  -cn.xVel;
-                        bn.yVel =  cn.yVel;
+                    case "right":
+                        if(bn.xVel > 0) {
+                            bn.xVel =  -cn.xVel;
+                        } else {
+                        }
+                    case "left":
+                        if(bn.xVel > 0) {
+
+                        } else {
+                            bn.xVel =  -cn.xVel;
+                        }
+                    case "top":
+                        if(bn.yVel > 0) {
+                            
+                        } else {
+                            bn.yVel =  -cn.yVel;
+                        }
+                    case "bottom":
+                        if(bn.yVel > 0) {
+                            bn.yVel =  -cn.yVel;
+                        } else {
+
+                        }
                 }
                 bn.color = "yellow";
             }
-            // if(isCollision(bn, cn)) {
-            //     let buffer = {
-            //         xVel: cn.xVel,
-            //         yVel: cn.yVel
-            //     }
-            //     bn.xVel = cn.xVel;
-            //     bn.yVel = cn.yVel;
-            // }
         })
     })
 }
@@ -296,6 +293,7 @@ function update() {
 
 function render() {
     ctx.clearRect(0,0,innerWidth,innerHeight);
+    tree.visualizeGrid(tree)
     tree.find({
         x: 0,
         y: 0,
@@ -320,14 +318,14 @@ function init() {
         y: 0,
         width: innerWidth,
         height: innerHeight
-    }, 10, 4, 0);
+    }, 8, 6, 0);
 
-    for(let i = 0; i < 1000; i++) {
+    for(let i = 0; i < 500; i++) {
         nodes.push({
             x: Math.random() * innerWidth,
             y: Math.random() * innerHeight,
-            xVel: Math.random() * 2 - 1,
-            yVel: Math.random() * 2 - 1,
+            xVel: Math.random() * 1.5 - .5,
+            yVel: Math.random() * 1.5 - .5,
             width: 10,
             height: 10,
         })
