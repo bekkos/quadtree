@@ -1,6 +1,7 @@
 # quadtree
+This is a js implementation of the quadtree datastructure and a demo where it is used for efficient collision detection in 2D space.
 
-Checkout https://github.com/timohausmann/quadtree-js.git for implementation details.
+https://github.com/timohausmann/quadtree-js.git was a helpful resource.
 
 ## Demo: https://bekkos.github.io/quadtree/
 
